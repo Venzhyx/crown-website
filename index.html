@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CROWN — The Kingdom</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600;700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --blood:#6B0000;
+  --crimson:#C0392B;
+  --ember:#E8472A;
+  --ember2:#FF5533;
+  --gold:#C9A84C;
+  --gold2:#F0C040;
+  --parchment:#D4B896;
+  --dark:#140608;
+  --dark2:#1C0A0A;
+  --card:#200E0E;
+  --stone:#2E1515;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--dark);color:var(--parchment);font-family:'IM Fell English',serif;overflow-x:hidden;cursor:none;}
+
+#cur{width:12px;height:12px;border-radius:50%;background:var(--ember);position:fixed;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width .15s,height .15s,background .15s;}
+#cur-ring{width:36px;height:36px;border:1.5px solid rgba(232,71,42,.5);border-radius:50%;position:fixed;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:width .2s,height .2s;}
+
+body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");pointer-events:none;z-index:1000;opacity:.4;}
+
+.f-cinzel{font-family:'Cinzel Decorative',serif;}
+.f-cinzel-reg{font-family:'Cinzel',serif;}
+.f-fell{font-family:'IM Fell English',serif;}
+
+/* PRIMARY: Crimson/Red gradient (replaced gold as main) */
+.red-text{background:linear-gradient(135deg,#E8472A,#FF5533 40%,#C0392B 70%,#8B1A1A);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+/* Secondary gold */
+.gold-text{background:linear-gradient(135deg,#C9A84C,#F0C040 40%,#C9A84C 70%,#8B6914);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.crimson-text{background:linear-gradient(135deg,#E8472A,#C0392B 50%,#8B1A1A);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+
+.divider-red{height:1px;background:linear-gradient(90deg,transparent,#5C0A0A,#E8472A,#C0392B,#5C0A0A,transparent);}
+.divider-gold{height:1px;background:linear-gradient(90deg,transparent,#8B6914,#F0C040,#C9A84C,#8B6914,transparent);}
+.divider-blood{height:1px;background:linear-gradient(90deg,transparent,#5C1A1A,#C0392B,#5C1A1A,transparent);}
+
+/* HERO */
+#hero{min-height:100vh;position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+#hero-canvas{position:absolute;inset:0;pointer-events:none;}
+.vignette{position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 25%,rgba(14,4,4,.7) 100%);pointer-events:none;}
+
+/* Background glow layers for more visible depth */
+.hero-glow{position:absolute;border-radius:50%;pointer-events:none;filter:blur(80px);}
+
+.rune-ring{position:absolute;border-radius:50%;border:1px solid rgba(232,71,42,.12);animation:runeRotate var(--spd,20s) linear infinite;}
+@keyframes runeRotate{to{transform:translate(-50%,-50%) rotate(360deg);}}
+
+/* Crown title letters — UPDATED: always visible, hover ONLY adds glow (no sound, no disappearance) */
+.crown-letter{
+  display:inline-block;
+  transition:transform .35s cubic-bezier(.34,1.56,.64,1), filter .35s, text-shadow .35s;
+  cursor:default;
+  /* Always visible, no opacity change */
+}
+.crown-letter:hover{
+  transform:translateY(-14px) scale(1.1);
+  /* G L O W   O N L Y  —  no sound, no disappearance */
+  filter:drop-shadow(0 0 28px rgba(255,85,51,1)) drop-shadow(0 0 60px rgba(232,71,42,.6));
+  text-shadow:0 0 12px #FF5533, 0 0 30px #E8472A;
+}
+
+#hero-sub{will-change:opacity,transform;}
+
+.fog-layer{position:absolute;left:0;right:0;height:200px;background:linear-gradient(180deg,transparent,rgba(192,57,43,.08),transparent);pointer-events:none;animation:fogDrift 14s ease-in-out infinite alternate;}
+@keyframes fogDrift{0%{transform:scaleX(1) translateX(0);}100%{transform:scaleX(1.05) translateX(-2%);}}
+
+#battlements{position:absolute;bottom:0;left:0;right:0;pointer-events:none;}
+
+/* NAV */
+nav{background:rgba(14,4,4,.92);backdrop-filter:blur(16px);border-bottom:1px solid rgba(232,71,42,.15);}
+.nav-link{font-family:'Cinzel',serif;font-size:.7rem;letter-spacing:.22em;color:#6B2A20;transition:color .25s;}
+.nav-link:hover{color:#FF5533;}
+
+/* Reveal */
+.reveal{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s ease;}
+.reveal.in{opacity:1;transform:translateY(0);}
+
+/* Stone card — now with red tones */
+.stone-card{background:var(--card);border:1px solid rgba(232,71,42,.12);position:relative;overflow:hidden;transition:border-color .3s,transform .3s,box-shadow .3s;}
+.stone-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(232,71,42,.06),transparent);opacity:0;transition:opacity .3s;}
+.stone-card:hover{border-color:rgba(232,71,42,.5);transform:translateY(-4px);box-shadow:0 12px 40px rgba(192,57,43,.15);}
+.stone-card:hover::before{opacity:1;}
+
+/* FLIP CARDS */
+.court-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;max-width:780px;margin:0 auto;}
+@media(max-width:640px){.court-grid{grid-template-columns:1fr;max-width:260px;}}
+
+.card-wrap{perspective:900px;cursor:none;position:relative;}
+.card-inner{width:100%;padding-bottom:155%;position:relative;transform-style:preserve-3d;transition:transform .75s cubic-bezier(.4,0,.2,1);}
+.card-wrap.flipped .card-inner{transform:rotateY(180deg);}
+.card-face{position:absolute;inset:0;backface-visibility:hidden;border-radius:10px;overflow:hidden;border:2px solid rgba(232,71,42,.2);}
+
+.card-front{
+  background:linear-gradient(145deg,#1A0808,#25100E);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:.5rem;
+}
+.cf-pattern{
+  position:absolute;inset:0;
+  background-image:repeating-linear-gradient(45deg,rgba(232,71,42,.04) 0,rgba(232,71,42,.04) 1px,transparent 0,transparent 50%),repeating-linear-gradient(-45deg,rgba(201,168,76,.025) 0,rgba(201,168,76,.025) 1px,transparent 0,transparent 50%);
+  background-size:18px 18px;
+}
+.cf-corner{position:absolute;width:18px;height:18px;border-color:rgba(232,71,42,.35);border-style:solid;}
+.cf-corner.tl{top:8px;left:8px;border-width:2px 0 0 2px;}
+.cf-corner.tr{top:8px;right:8px;border-width:2px 2px 0 0;}
+.cf-corner.bl{bottom:8px;left:8px;border-width:0 0 2px 2px;}
+.cf-corner.br{bottom:8px;right:8px;border-width:0 2px 2px 0;}
+
+.card-back{
+  transform:rotateY(180deg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:1.2rem .8rem;text-align:center;
+  border-color:rgba(232,71,42,.35);
+}
+.king-back{background:linear-gradient(160deg,#1E0808,#2E0E08);}
+.mod1-back{background:linear-gradient(160deg,#0A0C1E,#0E1030);}
+.mod2-back{background:linear-gradient(160deg,#0A1E0C,#0C2A10);}
+
+.role-badge{font-family:'Cinzel',serif;font-size:.55rem;letter-spacing:.28em;padding:3px 10px;border-radius:2px;margin-bottom:.6rem;}
+.king-badge{background:rgba(232,71,42,.12);border:1px solid rgba(232,71,42,.5);color:#FF5533;}
+.mod1-badge{background:rgba(192,57,43,.1);border:1px solid rgba(192,57,43,.4);color:#E8472A;}
+.mod2-badge{background:rgba(87,192,100,.1);border:1px solid rgba(87,192,100,.4);color:#57C064;}
+
+.card-avatar{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.8rem;margin-bottom:.5rem;}
+.card-name{font-family:'Cinzel',serif;font-size:.88rem;letter-spacing:.1em;margin-bottom:.25rem;}
+.card-title{font-size:.82rem;font-style:italic;opacity:.65;margin-bottom:.4rem;}
+.card-desc{font-size:.76rem;opacity:.5;line-height:1.55;}
+.tap-hint{position:absolute;bottom:8px;left:0;right:0;text-align:center;font-family:'Cinzel',serif;font-size:.5rem;letter-spacing:.2em;color:rgba(232,71,42,.4);transition:opacity .3s;animation:tapPulse 2.5s ease-in-out infinite;}
+@keyframes tapPulse{0%,100%{opacity:.4;}50%{opacity:.9;}}
+.card-wrap.flipped .tap-hint{opacity:0;animation:none;}
+
+/* BTN — red primary */
+.btn-royal{background:linear-gradient(135deg,#5C0A0A,#C0392B);border:1px solid #E8472A;color:#F0D0C0;font-family:'Cinzel',serif;font-size:.68rem;letter-spacing:.25em;padding:14px 42px;position:relative;overflow:hidden;transition:box-shadow .3s,transform .2s;cursor:none;text-transform:uppercase;}
+.btn-royal::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,#E8472A,#C0392B);opacity:0;transition:opacity .3s;}
+.btn-royal:hover{box-shadow:0 0 28px rgba(232,71,42,.55),0 0 56px rgba(192,57,43,.25);transform:translateY(-2px);}
+.btn-royal:hover::before{opacity:1;}
+.btn-royal span{position:relative;z-index:1;font-weight:700;}
+
+/* Online dot */
+.dot-green{width:8px;height:8px;border-radius:50%;background:#57F287;box-shadow:0 0 8px #57F287;animation:gpulse 2s infinite;}
+@keyframes gpulse{0%,100%{box-shadow:0 0 8px #57F287;}50%{box-shadow:0 0 18px #57F287;}}
+
+/* Stats — red gradient numbers */
+.stat-num{font-family:'Cinzel Decorative',serif;font-size:3.2rem;background:linear-gradient(135deg,#C0392B,#E8472A);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+
+/* Herald banners */
+.herald-card{background:var(--card);border:1px solid rgba(232,71,42,.12);border-left-width:3px;padding:1.25rem 1.5rem;position:relative;overflow:hidden;transition:border-color .3s,transform .3s;}
+.herald-card::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,rgba(232,71,42,.05),transparent);opacity:0;transition:opacity .3s;}
+.herald-card:hover{transform:translateX(4px);}
+.herald-card:hover::before{opacity:1;}
+
+/* Modal */
+#decree-modal{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.9);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .4s;}
+#decree-modal.open{opacity:1;pointer-events:all;}
+.modal-parchment{background:linear-gradient(160deg,#200808,#180606);border:2px solid rgba(232,71,42,.35);border-radius:8px;padding:2.5rem;max-width:480px;width:90%;position:relative;box-shadow:0 0 80px rgba(192,57,43,.18),0 0 160px rgba(139,26,26,.1);}
+.modal-close{position:absolute;top:12px;right:16px;background:transparent;border:none;color:#6B2A20;font-family:'Cinzel',serif;font-size:.65rem;letter-spacing:.18em;cursor:none;transition:color .2s;}
+.modal-close:hover{color:#FF5533;}
+
+/* Timeline */
+.tl-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--ember);background:var(--dark);box-shadow:0 0 10px rgba(232,71,42,.5);flex-shrink:0;}
+.tl-line{width:2px;background:linear-gradient(180deg,rgba(232,71,42,.3),rgba(232,71,42,.05));flex:1;}
+
+/* Scanline */
+.scanline{position:fixed;left:0;right:0;height:2px;background:linear-gradient(transparent,rgba(232,71,42,.04),transparent);pointer-events:none;z-index:999;animation:scan 8s linear infinite;}
+@keyframes scan{0%{top:-2px;}100%{top:100vh;}}
+
+/* Fade-up */
+.fu{animation:fuAnim .9s ease forwards;opacity:0;}
+.d1{animation-delay:.1s}.d2{animation-delay:.28s}.d3{animation-delay:.44s}.d4{animation-delay:.58s}.d5{animation-delay:.82s}.d6{animation-delay:1s}
+@keyframes fuAnim{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:translateY(0)}}
+
+/* Sound wave indicator */
+#sound-btn{position:fixed;bottom:24px;right:24px;z-index:500;background:rgba(20,6,6,.85);border:1px solid rgba(232,71,42,.3);border-radius:50%;width:42px;height:42px;display:flex;align-items:center;justify-content:center;cursor:none;transition:border-color .2s,box-shadow .2s;}
+#sound-btn:hover{border-color:rgba(232,71,42,.7);box-shadow:0 0 16px rgba(232,71,42,.3);}
+.sound-bars{display:flex;align-items:flex-end;gap:2px;height:16px;}
+.sound-bars span{width:3px;background:#C0392B;border-radius:2px;transition:height .1s;}
+.sound-bars.active span:nth-child(1){animation:bar1 .6s ease infinite;}
+.sound-bars.active span:nth-child(2){animation:bar2 .6s ease infinite .1s;}
+.sound-bars.active span:nth-child(3){animation:bar3 .6s ease infinite .2s;}
+.sound-bars span:nth-child(1){height:6px}
+.sound-bars span:nth-child(2){height:10px}
+.sound-bars span:nth-child(3){height:6px}
+@keyframes bar1{0%,100%{height:4px}50%{height:14px}}
+@keyframes bar2{0%,100%{height:12px}50%{height:5px}}
+@keyframes bar3{0%,100%{height:6px}50%{height:14px}}
+
+/* Ember particle pop on card flip */
+@keyframes emberPop{0%{transform:translate(-50%,-50%) scale(1);opacity:1}100%{transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(0);opacity:0}}
+.ember-particle{position:fixed;pointer-events:none;width:6px;height:6px;border-radius:50%;background:var(--ember);z-index:9000;animation:emberPop .7s ease-out forwards;}
+</style>
+</head>
+<body>
+
+<div id="cur"></div>
+<div id="cur-ring"></div>
+<div class="scanline"></div>
+
+<!-- Sound Toggle -->
+<div id="sound-btn" onclick="toggleSound()" title="Toggle Sound">
+  <div class="sound-bars" id="sound-bars">
+    <span></span><span></span><span></span>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav class="fixed top-0 left-0 right-0 z-50 px-6 py-4">
+  <div class="max-w-6xl mx-auto flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <svg class="w-6 h-6" style="filter:drop-shadow(0 0 8px rgba(232,71,42,.6))" viewBox="0 0 24 24" fill="none">
+        <path d="M2 19h20M3 7l4 6 5-8 5 8 4-6-2 12H5L3 7z" stroke="#E8472A" stroke-width="1.5" stroke-linejoin="round"/>
+      </svg>
+      <span class="f-cinzel text-xs text-[#8B2A1A]" style="letter-spacing:.35em">CROWN</span>
+    </div>
+    <div class="hidden md:flex items-center gap-4">
+  <a href="#hero" class="btn-royal text-xs px-4 py-2"><span>HOME</span></a>
+  <a href="#about" class="btn-royal text-xs px-4 py-2"><span>KINGDOM</span></a>
+  <a href="#court" class="btn-royal text-xs px-4 py-2"><span>COURT</span></a>
+  <a href="#chronicles" class="btn-royal text-xs px-4 py-2"><span>CHRONICLES</span></a>
+  <a href="#join" class="btn-royal text-xs px-5 py-2"><span>ENLIST</span></a>
+</div>
+<div class="md:hidden flex items-center gap-2">
+  <a href="#join" class="btn-royal text-xs px-3 py-2"><span>ENLIST</span></a>
+  <a href="https://discord.gg/" target="_blank" class="btn-royal text-xs px-3 py-2"><span>DISCORD</span></a>
+</div>
+  </div>
+</nav>
+
+<!-- ════════════ HERO ════════════ -->
+<section id="hero">
+  <canvas id="hero-canvas"></canvas>
+  <div class="vignette"></div>
+  
+  <!-- Background glow blobs for depth/visibility -->
+  <div class="hero-glow" style="width:600px;height:400px;background:rgba(139,26,26,.25);top:20%;left:10%;animation:blobPulse1 8s ease-in-out infinite;"></div>
+  <div class="hero-glow" style="width:500px;height:350px;background:rgba(192,57,43,.15);top:40%;right:5%;animation:blobPulse2 11s ease-in-out infinite;"></div>
+  <div class="hero-glow" style="width:400px;height:300px;background:rgba(90,15,15,.3);bottom:10%;left:30%;animation:blobPulse1 9s ease-in-out infinite 2s;"></div>
+
+  <div class="fog-layer" style="top:55%"></div>
+
+  <div class="rune-ring" style="width:560px;height:560px;top:50%;left:50%;transform:translate(-50%,-50%);--spd:28s;border-color:rgba(232,71,42,.1)"></div>
+  <div class="rune-ring" style="width:380px;height:380px;top:50%;left:50%;transform:translate(-50%,-50%);--spd:18s;border-color:rgba(192,57,43,.09)"></div>
+  <div class="rune-ring" style="width:230px;height:230px;top:50%;left:50%;transform:translate(-50%,-50%);--spd:12s;border-color:rgba(232,71,42,.2);animation-direction:reverse"></div>
+
+  <div class="relative z-10 text-center px-4 max-w-5xl mx-auto">
+    <!-- Live badge -->
+    <div class="fu d1 flex items-center justify-center gap-3 mb-7">
+      <div class="dot-green"></div>
+      <span class="f-cinzel-reg text-xs text-[#57F287]" style="letter-spacing:.25em">13 KNIGHTS PRESENT</span>
+      <span style="color:#4D1818">·</span>
+      <span class="f-cinzel-reg text-xs text-[#8B2A1A]" style="letter-spacing:.25em">55 SWORN</span>
+    </div>
+
+    <!-- CROWN letters — always visible, red gradient, hover ONLY glow (no sound, no disappearance) -->
+    <h1 class="fu d2 f-cinzel red-text mb-1 select-none" style="font-size:clamp(5rem,18vw,13rem);line-height:1;letter-spacing:.05em">
+      <span class="crown-letter">C</span><span class="crown-letter">R</span><span class="crown-letter">O</span><span class="crown-letter">W</span><span class="crown-letter">N</span>
+    </h1>
+
+    <div id="hero-sub">
+      <div class="divider-red fu d3 max-w-xs mx-auto my-5"></div>
+
+      <div class="fu d3 flex items-center justify-center gap-5 mb-4">
+        <div style="width:56px;height:1px;background:linear-gradient(90deg,transparent,rgba(232,71,42,.35))"></div>
+        <span class="f-cinzel text-xs text-[#8B2A1A]" style="letter-spacing:.4em">⸸ THE KINGDOM ⸸</span>
+        <div style="width:56px;height:1px;background:linear-gradient(90deg,rgba(232,71,42,.35),transparent)"></div>
+      </div>
+
+      <p class="fu d4 f-fell text-xl md:text-2xl text-[#9A7860] max-w-xl mx-auto leading-relaxed" style="font-style:italic">
+        "Where the sworn gather, and the crown never falls."
+      </p>
+      <p class="fu d4 f-cinzel text-xs text-[#5A2A1A] mt-3" style="letter-spacing:.3em">EST. APRIL 2023 · DISCORD SERVER</p>
+
+      <div class="fu d5 mt-8 flex justify-center">
+        <svg width="180" height="50" viewBox="0 0 180 50" fill="none" style="opacity:.5">
+          <path d="M10 25 L70 25" stroke="#E8472A" stroke-width="1"/>
+          <path d="M110 25 L170 25" stroke="#E8472A" stroke-width="1"/>
+          <path d="M75 10 L90 30 L105 10" stroke="#E8472A" stroke-width="1" stroke-linejoin="round"/>
+          <circle cx="90" cy="35" r="3" stroke="#E8472A" stroke-width="1"/>
+          <path d="M20 20 L20 30" stroke="#C0392B" stroke-width="1"/>
+          <path d="M160 20 L160 30" stroke="#C0392B" stroke-width="1"/>
+        </svg>
+      </div>
+
+      <div class="fu d6 mt-10 flex flex-col items-center gap-2" style="opacity:.5">
+        <span class="f-cinzel text-xs text-[#5A2A1A]" style="letter-spacing:.3em">DESCEND</span>
+        <div style="width:1px;height:40px;background:linear-gradient(180deg,rgba(232,71,42,.5),transparent)"></div>
+      </div>
+    </div>
+  </div>
+
+  <svg id="battlements" viewBox="0 0 1440 70" preserveAspectRatio="none" style="height:70px">
+    <path d="M0,70 L0,35 L40,35 L40,15 L80,15 L80,35 L160,35 L160,15 L200,15 L200,35 L280,35 L280,15 L320,15 L320,35 L400,35 L400,15 L440,15 L440,35 L520,35 L520,15 L560,15 L560,35 L640,35 L640,15 L680,15 L680,35 L760,35 L760,15 L800,15 L800,35 L880,35 L880,15 L920,15 L920,35 L1000,35 L1000,15 L1040,15 L1040,35 L1120,35 L1120,15 L1160,15 L1160,35 L1240,35 L1240,15 L1280,15 L1280,35 L1360,35 L1360,15 L1400,15 L1400,35 L1440,35 L1440,70 Z"
+      fill="#140608" stroke="rgba(232,71,42,.1)" stroke-width="1"/>
+  </svg>
+</section>
+
+<!-- ════════════ ABOUT ════════════ -->
+<section id="about" class="relative py-28 px-6" style="background:linear-gradient(180deg,#140608,#1a0808,#160608)">
+  <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 70% 40%,rgba(139,26,26,.12) 0%,transparent 60%);pointer-events:none"></div>
+  <div class="max-w-5xl mx-auto relative z-10">
+
+    <div class="reveal text-center mb-16">
+      <p class="f-cinzel text-xs text-[#5A2A1A] tracking-widest mb-3">— THE REALM —</p>
+      <h2 class="f-cinzel text-4xl md:text-5xl red-text mb-4">The Kingdom of Crown</h2>
+      <div class="divider-red max-w-xs mx-auto mt-5"></div>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-5 mb-14">
+      <div class="reveal herald-card rounded-sm" style="border-left-color:#E8472A">
+        <p class="f-cinzel text-xs text-[#E8472A] tracking-widest mb-2">⚜ FELLOWSHIP</p>
+        <p class="text-[#9A7860] text-lg leading-relaxed">A Discord community forged in trust, where every voice holds weight and every member is a knight.</p>
+      </div>
+      <div class="reveal herald-card rounded-sm" style="transition-delay:.12s;border-left-color:#C0392B">
+        <p class="f-cinzel text-xs text-[#C0392B] tracking-widest mb-2">⚔ LOYALTY</p>
+        <p class="text-[#9A7860] text-lg leading-relaxed">Built on bonds that withstand time. Since April 2023, the crown has never wavered.</p>
+      </div>
+      <div class="reveal herald-card rounded-sm" style="transition-delay:.24s;border-left-color:#8B1A1A">
+        <p class="f-cinzel text-xs text-[#8B1A1A] tracking-widest mb-2">♜ GLORY</p>
+        <p class="text-[#9A7860] text-lg leading-relaxed">Active events, honest conversation, and a realm that grows stronger with each new member.</p>
+      </div>
+    </div>
+
+    <div class="reveal grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="stone-card rounded-sm p-6 text-center">
+        <div class="stat-num" data-target="55">0</div>
+        <p class="f-cinzel text-xs text-[#5A2A1A] tracking-widest mt-1">SWORN</p>
+      </div>
+      <div class="stone-card rounded-sm p-6 text-center" style="transition-delay:.08s">
+        <div class="stat-num" data-target="13">0</div>
+        <p class="f-cinzel text-xs text-[#5A2A1A] tracking-widest mt-1">PRESENT</p>
+      </div>
+      <div class="stone-card rounded-sm p-6 text-center" style="transition-delay:.16s">
+        <div class="stat-num" data-target="3">0</div>
+        <p class="f-cinzel text-xs text-[#5A2A1A] tracking-widest mt-1">YEARS</p>
+      </div>
+      <div class="stone-card rounded-sm p-6 text-center" style="transition-delay:.24s">
+        <div class="stat-num" data-target="1">0</div>
+        <p class="f-cinzel text-xs text-[#5A2A1A] tracking-widest mt-1">KINGDOM</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════ THE COURT ════════════ -->
+<section id="court" class="relative py-28 px-6" style="background:linear-gradient(180deg,#160608,#1a0808,#160608)">
+  <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 30% 60%,rgba(100,15,15,.18) 0%,transparent 65%);pointer-events:none"></div>
+  <div class="max-w-5xl mx-auto relative z-10">
+
+    <div class="reveal text-center mb-5">
+      <p class="f-cinzel text-xs text-[#5A2A1A] tracking-widest mb-3">— THE HIGH COURT —</p>
+      <h2 class="f-cinzel text-4xl md:text-5xl red-text mb-4">Faces of the Realm</h2>
+      <div class="divider-red max-w-xs mx-auto my-5"></div>
+      <p class="f-fell text-[#7A5840] text-lg" style="font-style:italic">Tap each seal to reveal who guards the crown.</p>
+    </div>
+
+    <div class="reveal court-grid mt-14">
+
+      <!-- ★ KING ★ -->
+      <div class="card-wrap" id="cw-king" onclick="flipCard('king',event)">
+        <div class="card-inner" id="ci-king">
+          <div class="card-face card-front" style="border-color:rgba(232,71,42,.3)">
+            <div class="cf-pattern"></div>
+            <div class="cf-corner tl"></div><div class="cf-corner tr"></div>
+            <div class="cf-corner bl"></div><div class="cf-corner br"></div>
+            <svg width="68" height="68" viewBox="0 0 80 80" fill="none" style="filter:drop-shadow(0 0 18px rgba(232,71,42,.65));position:relative;z-index:1">
+              <circle cx="40" cy="40" r="36" stroke="#8B1A1A" stroke-width="1"/>
+              <path d="M16 56h48M18 30l8 12 14-20 14 20 8-12-6 26H24L18 30z" stroke="#E8472A" stroke-width="2" stroke-linejoin="round"/>
+              <circle cx="40" cy="30" r="4" fill="rgba(232,71,42,.2)" stroke="#FF5533" stroke-width="1"/>
+            </svg>
+            <p class="f-cinzel text-xs text-[#8B2A1A] relative z-10" style="letter-spacing:.18em;font-size:.55rem">KING'S SEAL</p>
+            <div class="tap-hint">✦ TAP TO REVEAL ✦</div>
+          </div>
+          <div class="card-face card-back king-back" style="border-color:rgba(232,71,42,.4)">
+            <div class="role-badge king-badge">KING · OWNER</div>
+            <div class="card-avatar" style="background:linear-gradient(135deg,#2A0800,#3D1000);border:2px solid rgba(232,71,42,.5)">👑</div>
+            <div class="card-name red-text">Your Name</div>
+            <div class="card-title text-[#C0392B]">Founder of the Kingdom</div>
+            <div class="divider-red" style="width:65%;margin:.45rem auto"></div>
+            <div class="card-desc text-[#8A6850]">"I built this kingdom from nothing. Every stone, every oath — mine."</div>
+            <button style="background:none;border:none;cursor:none;margin-top:.6rem" class="f-cinzel text-xs text-[#C0392B] hover:text-[#FF5533] transition-colors" style="letter-spacing:.15em"
+              onclick="event.stopPropagation();openDecree('king');playClick()">READ DECREE ›</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ★ MARSHAL ★ -->
+      <div class="card-wrap" id="cw-mod1" onclick="flipCard('mod1',event)">
+        <div class="card-inner" id="ci-mod1">
+          <div class="card-face card-front" style="border-color:rgba(192,57,43,.25)">
+            <div class="cf-pattern"></div>
+            <div class="cf-corner tl" style="border-color:rgba(192,57,43,.3)"></div>
+            <div class="cf-corner tr" style="border-color:rgba(192,57,43,.3)"></div>
+            <div class="cf-corner bl" style="border-color:rgba(192,57,43,.3)"></div>
+            <div class="cf-corner br" style="border-color:rgba(192,57,43,.3)"></div>
+            <svg width="68" height="68" viewBox="0 0 80 80" fill="none" style="filter:drop-shadow(0 0 18px rgba(192,57,43,.55));position:relative;z-index:1">
+              <circle cx="40" cy="40" r="36" stroke="#5C1A1A" stroke-width="1"/>
+              <path d="M28 55 L40 20 L52 55 M34 40 h12" stroke="#C0392B" stroke-width="2" stroke-linecap="round"/>
+              <circle cx="40" cy="18" r="4" fill="rgba(192,57,43,.2)" stroke="#E8472A" stroke-width="1"/>
+            </svg>
+            <p class="f-cinzel text-xs text-[#6B1A1A] relative z-10" style="letter-spacing:.18em;font-size:.55rem">MARSHAL'S SEAL</p>
+            <div class="tap-hint" style="color:rgba(192,57,43,.4)">⚔ TAP TO REVEAL ⚔</div>
+          </div>
+          <div class="card-face card-back mod1-back" style="border-color:rgba(192,57,43,.3)">
+            <div class="role-badge mod1-badge">HIGH MARSHAL</div>
+            <div class="card-avatar" style="background:linear-gradient(135deg,#1A0000,#300A0A);border:2px solid rgba(192,57,43,.4)">⚔️</div>
+            <div class="card-name crimson-text">Mod Name</div>
+            <div class="card-title text-[#C0392B]">Keeper of Order</div>
+            <div class="divider-blood" style="width:65%;margin:.45rem auto"></div>
+            <div class="card-desc text-[#8A6850]">"Peace is kept not by mercy alone — but by an unwavering hand."</div>
+            <button style="background:none;border:none;cursor:none;margin-top:.6rem" class="f-cinzel text-xs text-[#C0392B] hover:text-[#E8472A] transition-colors" style="letter-spacing:.15em"
+              onclick="event.stopPropagation();openDecree('mod1');playClick()">READ DECREE ›</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ★ STEWARD ★ -->
+      <div class="card-wrap" id="cw-mod2" onclick="flipCard('mod2',event)">
+        <div class="card-inner" id="ci-mod2">
+          <div class="card-face card-front" style="border-color:rgba(87,192,100,.2)">
+            <div class="cf-pattern"></div>
+            <div class="cf-corner tl" style="border-color:rgba(87,192,100,.3)"></div>
+            <div class="cf-corner tr" style="border-color:rgba(87,192,100,.3)"></div>
+            <div class="cf-corner bl" style="border-color:rgba(87,192,100,.3)"></div>
+            <div class="cf-corner br" style="border-color:rgba(87,192,100,.3)"></div>
+            <svg width="68" height="68" viewBox="0 0 80 80" fill="none" style="filter:drop-shadow(0 0 18px rgba(87,192,100,.5));position:relative;z-index:1">
+              <circle cx="40" cy="40" r="36" stroke="#1A3A1A" stroke-width="1"/>
+              <path d="M28 56 V36 L40 24 L52 36 V56 M36 56 V46 h8 v10" stroke="#57C064" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <p class="f-cinzel text-xs text-[#1A5A1A] relative z-10" style="letter-spacing:.18em;font-size:.55rem">STEWARD'S SEAL</p>
+            <div class="tap-hint" style="color:rgba(87,192,100,.4)">♜ TAP TO REVEAL ♜</div>
+          </div>
+          <div class="card-face card-back mod2-back" style="border-color:rgba(87,192,100,.3)">
+            <div class="role-badge mod2-badge">ROYAL STEWARD</div>
+            <div class="card-avatar" style="background:linear-gradient(135deg,#001A00,#0A2E0A);border:2px solid rgba(87,192,100,.4)">🛡️</div>
+            <div class="card-name" style="font-family:'Cinzel',serif;font-size:.88rem;letter-spacing:.1em;margin-bottom:.25rem;background:linear-gradient(135deg,#57C064,#3A9444);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Mod Name</div>
+            <div class="card-title text-[#3A9444]">Guardian of the Gates</div>
+            <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(87,192,100,.4),transparent);width:65%;margin:.45rem auto"></div>
+            <div class="card-desc text-[#8A6850]">"Every soul that enters this realm — I am their first witness."</div>
+            <button style="background:none;border:none;cursor:none;margin-top:.6rem" class="f-cinzel text-xs text-[#3A9444] hover:text-[#57C064] transition-colors" style="letter-spacing:.15em"
+              onclick="event.stopPropagation();openDecree('mod2');playClick()">READ DECREE ›</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="reveal text-center f-cinzel text-xs text-[#3D1A18] mt-10 tracking-widest">✦ EDIT NAMES & ROLES DIRECTLY IN THE CODE ✦</p>
+  </div>
+</section>
+
+<!-- ════════════ CHRONICLES ════════════ -->
+<section id="chronicles" class="relative py-28 px-6" style="background:#140608">
+  <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,rgba(80,10,10,.2) 0%,transparent 70%);pointer-events:none"></div>
+  <div class="max-w-3xl mx-auto relative z-10">
+    <div class="reveal text-center mb-16">
+      <p class="f-cinzel text-xs text-[#5A2A1A] tracking-widest mb-3">— SCROLLS OF TIME —</p>
+      <h2 class="f-cinzel text-4xl md:text-5xl red-text mb-4">The Chronicles</h2>
+      <div class="divider-red max-w-xs mx-auto mt-5"></div>
+    </div>
+
+    <div>
+      <div class="reveal flex gap-6">
+        <div class="flex flex-col items-center">
+          <div class="tl-dot" style="border-color:#C9A84C;box-shadow:0 0 14px rgba(201,168,76,.5)"></div>
+          <div class="tl-line"></div>
+        </div>
+        <div class="pb-12">
+          <p class="f-cinzel text-xs text-[#C9A84C] tracking-widest mb-2">APRIL 2023</p>
+          <h4 class="f-cinzel-reg text-xl text-[#D4B896] mb-2">The Founding</h4>
+          <p class="text-[#8A6850] text-lg leading-relaxed">Crown was born from a single vision — a place to gather, speak freely, and build something real. The first stone was laid.</p>
+        </div>
+      </div>
+
+      <div class="reveal flex gap-6" style="transition-delay:.1s">
+        <div class="flex flex-col items-center">
+          <div class="tl-dot" style="border-color:#8B1A1A;box-shadow:0 0 12px rgba(139,26,26,.5)"></div>
+          <div class="tl-line"></div>
+        </div>
+        <div class="pb-12">
+          <p class="f-cinzel text-xs text-[#8B1A1A] tracking-widest mb-2">2023 — 2024</p>
+          <h4 class="f-cinzel-reg text-xl text-[#D4B896] mb-2">The Growth</h4>
+          <p class="text-[#8A6850] text-lg leading-relaxed">Member by member, knight by knight. The kingdom grew not in haste, but in quality — each addition hand-chosen by the crown.</p>
+        </div>
+      </div>
+
+      <div class="reveal flex gap-6" style="transition-delay:.2s">
+        <div class="flex flex-col items-center">
+          <div class="tl-dot" style="border-color:#E8472A;box-shadow:0 0 12px rgba(232,71,42,.5)"></div>
+          <div class="tl-line" style="background:linear-gradient(180deg,rgba(232,71,42,.3),transparent)"></div>
+        </div>
+        <div class="pb-12">
+          <p class="f-cinzel text-xs text-[#E8472A] tracking-widest mb-2">2025</p>
+          <h4 class="f-cinzel-reg text-xl text-[#D4B896] mb-2">The Trials</h4>
+          <p class="text-[#8A6850] text-lg leading-relaxed">Every kingdom faces its trials. Crown endured them, emerged stronger, and the bonds between members were forged like iron in fire.</p>
+        </div>
+      </div>
+
+      <div class="reveal flex gap-6" style="transition-delay:.3s">
+        <div class="flex flex-col items-center">
+          <div class="tl-dot" style="border-color:#FF5533;box-shadow:0 0 18px rgba(255,85,51,.65)"></div>
+        </div>
+        <div>
+          <p class="f-cinzel text-xs text-[#FF5533] tracking-widest mb-2">TODAY · APRIL 2026</p>
+          <h4 class="f-cinzel-reg text-xl text-[#D4B896] mb-2">55 Knights Strong</h4>
+          <p class="text-[#8A6850] text-lg leading-relaxed">The crown stands. 55 sworn, 13 ever-present. The kingdom breathes, lives, and awaits the next chapter of its legend.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════ JOIN ════════════ -->
+<section id="join" class="relative py-36 px-6 overflow-hidden" style="background:#140608">
+  <div style="position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(139,26,26,.18) 0%,transparent 65%);pointer-events:none"></div>
+
+  <div class="reveal relative z-10 text-center max-w-2xl mx-auto">
+    <div class="w-20 h-20 rounded-full border flex items-center justify-center mx-auto mb-8"
+         style="border-color:rgba(232,71,42,.3);box-shadow:0 0 40px rgba(192,57,43,.22)">
+      <svg class="w-10 h-10" style="filter:drop-shadow(0 0 12px rgba(232,71,42,.7))" viewBox="0 0 24 24" fill="none">
+        <path d="M2 19h20M3 7l4 6 5-8 5 8 4-6-2 12H5L3 7z" stroke="#E8472A" stroke-width="1.5" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <h2 class="f-cinzel text-5xl md:text-6xl red-text mb-4">Pledge Your Oath</h2>
+    <div class="divider-red max-w-xs mx-auto my-6"></div>
+    <p class="f-fell text-[#7A5840] text-xl mb-2 leading-relaxed" style="font-style:italic">
+      "The crown does not seek many — it seeks the worthy."
+    </p>
+    <p class="f-cinzel text-xs text-[#4D2020] tracking-widest mb-12">55 KNIGHTS HAVE TAKEN THE OATH</p>
+
+    <a href="https://discord.gg/" target="_blank" class="btn-royal inline-flex items-center gap-3" onclick="playClick()">
+      <span class="flex items-center gap-3">
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057.1 18.18.111 18.19.12 18.2a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 13.94 13.94 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+        ENTER THE KINGDOM
+      </span>
+    </a>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="py-8 px-6" style="border-top:1px solid rgba(232,71,42,.08);background:#0E0404">
+  <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+    <span class="f-cinzel text-xs text-[#3D1A14]" style="letter-spacing:.3em">CROWN</span>
+    <p class="f-cinzel text-xs text-[#3D1A14]" style="letter-spacing:.2em">EST. APR 2023 · 55 SWORN</p>
+    <p class="f-fell text-[#3D1A14] text-sm" style="font-style:italic">The crown never falls.</p>
+  </div>
+</footer>
+
+<!-- ════════════ DECREE MODAL ════════════ -->
+<div id="decree-modal" onclick="closeDecree(event)">
+  <div class="modal-parchment" onclick="event.stopPropagation()">
+    <button class="modal-close f-cinzel" onclick="closeDecree();playClose()">✕ CLOSE</button>
+
+    <div class="text-center mb-1">
+      <svg width="120" height="24" viewBox="0 0 120 24" fill="none" style="opacity:.45;margin:0 auto 8px">
+        <path d="M10 12 L50 12" stroke="#E8472A" stroke-width="1"/>
+        <path d="M70 12 L110 12" stroke="#E8472A" stroke-width="1"/>
+        <circle cx="60" cy="12" r="4" stroke="#E8472A" stroke-width="1"/>
+        <path d="M53 12 L57 8 L60 12 L63 8 L67 12" stroke="#E8472A" stroke-width="1" stroke-linejoin="round"/>
+      </svg>
+    </div>
+
+    <div class="text-center mb-5">
+      <p id="m-badge" class="f-cinzel text-xs tracking-widest mb-3 text-[#8B2A1A]"></p>
+      <div id="m-icon" class="text-4xl mb-3"></div>
+      <h3 id="m-name" class="f-cinzel text-2xl red-text mb-1"></h3>
+      <p id="m-title" class="f-fell text-[#7A5840]" style="font-style:italic"></p>
+    </div>
+
+    <div class="divider-red my-5"></div>
+    <p id="m-body" class="f-fell text-[#9A8870] text-lg leading-relaxed text-center"></p>
+    <div class="divider-red my-5"></div>
+
+    <p class="f-cinzel text-xs text-[#4D2020] text-center tracking-widest">BY ROYAL DECREE · CROWN SERVER</p>
+  </div>
+</div>
+
+<style>
+@keyframes blobPulse1{0%,100%{opacity:.7;transform:scale(1);}50%{opacity:1;transform:scale(1.08);}}
+@keyframes blobPulse2{0%,100%{opacity:.6;transform:scale(1);}50%{opacity:.9;transform:scale(1.06);}}
+</style>
+
+<script>
+/* ── AUDIO ENGINE ── */
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx = null;
+let soundEnabled = true;
+
+function getCtx() {
+  if (!audioCtx) audioCtx = new AudioCtx();
+  return audioCtx;
+}
+
+let flipAudio = null;
+
+function playFlip() {
+  if (!soundEnabled) return;
+  try {
+    if (!flipAudio) {
+      flipAudio = new Audio('/sounds/flip.mp3');
+      flipAudio.volume = 0.35;
+    }
+    flipAudio.currentTime = 0;
+    flipAudio.play().catch(e => console.log(e));
+  } catch(e) {}
+}
+
+function playClick() {
+  if (!soundEnabled) return;
+  try {
+    const ctx = getCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(620, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(280, ctx.currentTime + 0.1);
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(); osc.stop(ctx.currentTime + 0.12);
+  } catch(e){}
+}
+
+function playClose() {
+  if (!soundEnabled) return;
+  try {
+    const ctx = getCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(350, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(160, ctx.currentTime + 0.14);
+    gain.gain.setValueAtTime(0.12, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(); osc.stop(ctx.currentTime + 0.15);
+  } catch(e){}
+}
+
+function playDecree() {
+  if (!soundEnabled) return;
+  try {
+    const ctx = getCtx();
+    const notes = [330, 415, 494, 659];
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0, ctx.currentTime + i * 0.09);
+      gain.gain.linearRampToValueAtTime(0.1, ctx.currentTime + i * 0.09 + 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.09 + 0.18);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + i * 0.09);
+      osc.stop(ctx.currentTime + i * 0.09 + 0.2);
+    });
+  } catch(e){}
+}
+
+function toggleSound() {
+  soundEnabled = !soundEnabled;
+  const bars = document.getElementById('sound-bars');
+  bars.classList.toggle('active', soundEnabled);
+  if (soundEnabled) playClick();
+}
+document.getElementById('sound-bars').classList.add('active');
+
+/* ── CURSOR ── */
+const cur=document.getElementById('cur'),ring=document.getElementById('cur-ring');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cur.style.left=mx+'px';cur.style.top=my+'px';});
+(function loop(){rx+=(mx-rx)*.11;ry+=(my-ry)*.11;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(loop);})();
+
+document.querySelectorAll('a,button,.card-wrap').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{cur.style.width='20px';cur.style.height='20px';cur.style.background='#FF5533';ring.style.width='50px';ring.style.height='50px';ring.style.borderColor='rgba(255,85,51,.5)';});
+  el.addEventListener('mouseleave',()=>{cur.style.width='12px';cur.style.height='12px';cur.style.background='var(--ember)';ring.style.width='36px';ring.style.height='36px';ring.style.borderColor='rgba(232,71,42,.5)';});
+});
+
+/* ── HERO CANVAS (more embers for visibility) ── */
+const cv=document.getElementById('hero-canvas');
+const c=cv.getContext('2d');
+let W,H;
+function rsz(){W=cv.width=cv.offsetWidth;H=cv.height=cv.offsetHeight;}
+rsz();window.addEventListener('resize',rsz);
+
+const stars=Array.from({length:120},()=>({
+  x:Math.random()*1600,y:Math.random()*900,r:Math.random()*1.5+.3,
+  a:Math.random()*.6+.15,f:Math.random()*2+.8,p:Math.random()*Math.PI*2,
+  red:Math.random()>.6
+}));
+const embers=Array.from({length:50},()=>({
+  x:Math.random()*1600,y:Math.random()*900+300,
+  vx:(Math.random()-.5)*.4,vy:-(Math.random()*.6+.2),
+  r:Math.random()*2+.4,a:Math.random()*.5+.2,lf:Math.random()
+}));
+
+let t=0;
+function draw(){
+  c.clearRect(0,0,W,H);t+=.01;
+  const g=c.createRadialGradient(W*.5,H*.5,0,W*.5,H*.5,W*.6);
+  g.addColorStop(0,'rgba(100,15,15,.18)');g.addColorStop(1,'transparent');
+  c.fillStyle=g;c.fillRect(0,0,W,H);
+
+  stars.forEach(s=>{
+    const a=s.a*(.65+.35*Math.sin(t*s.f+s.p));
+    c.beginPath();c.arc(s.x%W,s.y%H,s.r,0,Math.PI*2);
+    c.fillStyle=s.red?`rgba(232,71,42,${a})`:`rgba(212,184,150,${a*.6})`;c.fill();
+  });
+  embers.forEach(e=>{
+    e.x+=e.vx;e.y+=e.vy;e.lf+=.003;
+    if(e.y<-8||e.lf>1){e.y=H+8;e.x=Math.random()*W;e.lf=0;}
+    const a=e.a*(1-e.lf);
+    c.beginPath();c.arc(e.x%W,e.y,e.r,0,Math.PI*2);
+    c.fillStyle=`rgba(232,71,42,${a})`;c.fill();
+  });
+  for(let i=0;i<5;i++){
+    const y=H*.58+Math.sin(t*.22+i*1.2)*28;
+    const mg=c.createLinearGradient(0,y-20,0,y+20);
+    mg.addColorStop(0,'transparent');
+    mg.addColorStop(.5,`rgba(139,26,26,${.045+.01*Math.sin(t+i)})`);
+    mg.addColorStop(1,'transparent');
+    c.fillStyle=mg;c.fillRect(0,y-20,W,40);
+  }
+  requestAnimationFrame(draw);
+}
+draw();
+
+/* ── HERO SCROLL FADE ── */
+const heroSub=document.getElementById('hero-sub');
+window.addEventListener('scroll',()=>{
+  const sy=window.scrollY;
+  const f=Math.max(0,1-sy/300);
+  heroSub.style.opacity=f;
+  heroSub.style.transform=`translateY(${-sy*.35}px)`;
+},{passive:true});
+
+/* ── SCROLL REVEAL ── */
+const reveals=document.querySelectorAll('.reveal');
+const ro=new IntersectionObserver(entries=>{
+  entries.forEach((e,i)=>{if(e.isIntersecting){setTimeout(()=>e.target.classList.add('in'),i*55);ro.unobserve(e.target);}});
+},{threshold:.08});
+reveals.forEach(el=>ro.observe(el));
+
+/* ── COUNTER ── */
+const co=new IntersectionObserver(entries=>{
+  entries.forEach(entry=>{
+    if(entry.isIntersecting){
+      const el=entry.target,tgt=+el.dataset.target;
+      let n=0;const step=tgt/55;
+      const ti=setInterval(()=>{n+=step;if(n>=tgt){n=tgt;clearInterval(ti);}el.textContent=Math.floor(n);},18);
+      co.unobserve(el);
+    }
+  });
+},{threshold:.5});
+document.querySelectorAll('[data-target]').forEach(el=>co.observe(el));
+
+/* ── EMBER BURST PARTICLES ── */
+function spawnEmbers(x, y, color='#E8472A') {
+  for (let i = 0; i < 10; i++) {
+    const p = document.createElement('div');
+    p.className = 'ember-particle';
+    const angle = (Math.PI * 2 * i) / 10;
+    const dist = 40 + Math.random() * 40;
+    p.style.left = x + 'px';
+    p.style.top = y + 'px';
+    p.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
+    p.style.setProperty('--dy', Math.sin(angle) * dist + 'px');
+    p.style.background = color;
+    p.style.width = (3 + Math.random() * 4) + 'px';
+    p.style.height = p.style.width;
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 750);
+  }
+}
+
+/* ── CARD FLIP ── */
+const flipped={king:false,mod1:false,mod2:false};
+function flipCard(id, event) {
+  flipped[id]=!flipped[id];
+  document.getElementById('cw-'+id).classList.toggle('flipped',flipped[id]);
+  playFlip();
+  if (event) {
+    spawnEmbers(event.clientX, event.clientY, flipped[id] ? '#E8472A' : '#C9A84C');
+  }
+}
+
+/* ── DECREE MODAL ── */
+const decrees={
+  king:{badge:'⸸ KING · FOUNDER ⸸',icon:'👑',name:'SPENT',title:'Lord of Crown',
+    body:'This kingdom was not inherited — it was built. From the first channel to the last member, every decree flows from one hand. I built Crown to be a place where people matter more than numbers. If you are reading this, you are already welcome.'},
+  mod1:{badge:'⚔ HIGH MARSHAL ⚔',icon:'⚔️',name:'XYRO',title:'Keeper of Order',
+    body:'Order is not silence. It is the space between voices where everyone can still be heard. I enforce the laws of this realm not with iron, but with fairness. Every knight deserves a fair trial, and every verdict is weighed with care.'},
+  mod2:{badge:'♜ ROYAL STEWARD ♜',icon:'🗡️',name:'KYRIE',title:'Guardian of the Gates',
+    body:'Every soul that steps through these gates is known to me. My duty is welcome — to ensure no newcomer wanders lost, and no veteran goes unrecognized. The kingdom grows one honest greeting at a time.'}
+};
+
+function openDecree(key){
+  const d=decrees[key];
+  document.getElementById('m-badge').textContent=d.badge;
+  document.getElementById('m-icon').textContent=d.icon;
+  document.getElementById('m-name').textContent=d.name;
+  document.getElementById('m-title').textContent=d.title;
+  document.getElementById('m-body').textContent=d.body;
+  document.getElementById('decree-modal').classList.add('open');
+  playDecree();
+}
+function closeDecree(e){
+  if(!e||e.target===document.getElementById('decree-modal'))
+    document.getElementById('decree-modal').classList.remove('open');
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeDecree();playClose();}});
+
+/* ── SMOOTH SCROLL ── */
+document.querySelectorAll('a[href^="#"]').forEach(a=>{
+  a.addEventListener('click',e=>{
+    e.preventDefault();
+    const el=document.querySelector(a.getAttribute('href'));
+    if(el)el.scrollIntoView({behavior:'smooth'});
+  });
+});
+
+/* ── CROWN LETTER hover ONLY glow (no sound, no disappearance) ── */
+// All previous hover sound events for crown letters have been removed.
+// No extra sound function attached to .crown-letter elements.
+</script>
+</body>
+</html>
